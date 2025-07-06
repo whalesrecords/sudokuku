@@ -18,8 +18,10 @@ class SudokuGame {
 
     init() {
         this.updateDisplay();
+        this.updateDateTime();
         this.generateGrid();
         this.setupEventListeners();
+        this.startDateTimeUpdater();
     }
 
     generateGrid() {
@@ -238,6 +240,30 @@ class SudokuGame {
     saveProgress() {
         localStorage.setItem('sudoku-level', this.level.toString());
         localStorage.setItem('sudoku-score', this.score.toString());
+    }
+
+    updateDateTime() {
+        const now = new Date();
+        const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+        const months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        
+        const time = now.toLocaleTimeString('fr-FR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        const dayName = days[now.getDay()];
+        const day = now.getDate();
+        const month = months[now.getMonth()];
+        
+        document.getElementById('current-time').textContent = time;
+        document.getElementById('current-date').textContent = `${dayName} ${day} ${month}`;
+    }
+
+    startDateTimeUpdater() {
+        setInterval(() => {
+            this.updateDateTime();
+        }, 1000);
     }
 
     setupEventListeners() {
