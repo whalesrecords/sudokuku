@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Progressive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2196F3">
+</head>
+<body>
+    <div class="particles-container">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+    <div class="container">
+        <header>
+            <h1 class="title-gradient">✨ Sudoku Progressive ✨</h1>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">Niveau</span>
+                    <span class="stat-value" id="level">1</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Difficulté</span>
+                    <span class="stat-value" id="difficulty">Facile</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Score</span>
+                    <span class="stat-value" id="score">0</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="game-controls">
+                <button id="new-game" class="btn-primary">
+                    <span>🎮</span> Nouvelle Partie
+                </button>
+                <button id="hint" class="btn-secondary">
+                    <span>💡</span> Indice
+                </button>
+                <button id="check" class="btn-accent">
+                    <span>✅</span> Vérifier
+                </button>
+            </div>
+
+            <div class="sudoku-grid" id="sudoku-grid">
+                <!-- La grille sera générée dynamiquement -->
+            </div>
+
+            <div class="number-pad">
+                <button class="number-btn" data-number="1">1</button>
+                <button class="number-btn" data-number="2">2</button>
+                <button class="number-btn" data-number="3">3</button>
+                <button class="number-btn" data-number="4">4</button>
+                <button class="number-btn" data-number="5">5</button>
+                <button class="number-btn" data-number="6">6</button>
+                <button class="number-btn" data-number="7">7</button>
+                <button class="number-btn" data-number="8">8</button>
+                <button class="number-btn" data-number="9">9</button>
+                <button class="number-btn erase" data-number="0">✕</button>
+            </div>
+        </main>
+
+        <div class="modal" id="victory-modal">
+            <div class="modal-content">
+                <div class="celebration">🎉</div>
+                <h2 class="modal-title">Félicitations!</h2>
+                <p class="modal-text">Vous avez terminé ce niveau avec brio!</p>
+                <button id="next-level" class="btn-celebration">
+                    <span>🚀</span> Niveau Suivant
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="sudoku.js"></script>
+</body>
+</html>
