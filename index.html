@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudoku Progressive</title>
+    <title>Sudokuku</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
                 <div class="current-time" id="current-time">12:00</div>
                 <div class="current-date" id="current-date">Dimanche 6 Juillet</div>
             </div>
-            <h1 class="title-gradient">✨ Sudoku Progressive ✨</h1>
+            <h1 class="title-gradient">✨ Sudokuku ✨</h1>
             <div class="stats">
                 <div class="stat-item">
                     <span class="stat-label">Niveau</span>
@@ -44,10 +44,26 @@
                     <span class="stat-label">Score</span>
                     <span class="stat-value" id="score">0</span>
                 </div>
+                <div class="stat-item">
+                    <span class="stat-label">Temps</span>
+                    <span class="stat-value" id="timer">00:00</span>
+                </div>
             </div>
         </header>
 
         <main>
+            <div class="mode-selector">
+                <button id="mode-classic" class="mode-btn active" data-mode="classic">
+                    <span>🎯</span> Classique
+                </button>
+                <button id="mode-sprint" class="mode-btn" data-mode="sprint">
+                    <span>⚡</span> Sprint
+                </button>
+                <button id="mode-zen" class="mode-btn" data-mode="zen">
+                    <span>🧘</span> Zen
+                </button>
+            </div>
+
             <div class="game-controls">
                 <button id="new-game" class="btn-primary">
                     <span>🎮</span> Nouvelle Partie
@@ -57,6 +73,9 @@
                 </button>
                 <button id="check" class="btn-accent">
                     <span>✅</span> Vérifier
+                </button>
+                <button id="settings" class="btn-settings">
+                    <span>⚙️</span>
                 </button>
             </div>
 
@@ -83,10 +102,115 @@
                 <div class="celebration">🎉</div>
                 <h2 class="modal-title">Félicitations!</h2>
                 <p class="modal-text">Vous avez terminé ce niveau avec brio!</p>
-                <button id="next-level" class="btn-celebration">
-                    <span>🚀</span> Niveau Suivant
-                </button>
+                <div class="victory-stats">
+                    <div class="victory-stat">
+                        <span class="victory-label">Temps</span>
+                        <span class="victory-value" id="victory-time">02:34</span>
+                    </div>
+                    <div class="victory-stat">
+                        <span class="victory-label">Score</span>
+                        <span class="victory-value" id="victory-score">150</span>
+                    </div>
+                </div>
+                <div class="achievements" id="achievements-container">
+                    <!-- Les achievements seront ajoutés dynamiquement -->
+                </div>
+                <div class="modal-buttons">
+                    <button id="share-result" class="btn-share">
+                        <span>📤</span> Partager
+                    </button>
+                    <button id="next-level" class="btn-celebration">
+                        <span>🚀</span> Niveau Suivant
+                    </button>
+                </div>
             </div>
+        </div>
+
+        <div class="modal" id="settings-modal">
+            <div class="modal-content">
+                <h2 class="modal-title">Paramètres</h2>
+                <div class="settings-section">
+                    <h3>Thème</h3>
+                    <div class="theme-selector">
+                        <button class="theme-btn active" data-theme="default">🌈 Défaut</button>
+                        <button class="theme-btn" data-theme="dark">🌙 Sombre</button>
+                        <button class="theme-btn" data-theme="light">☀️ Clair</button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Animations</h3>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="animations-toggle" checked>
+                        <span class="slider"></span>
+                        Activer les animations
+                    </label>
+                </div>
+                <div class="settings-section">
+                    <h3>Statistiques</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-games">0</div>
+                            <div class="stat-description">Parties jouées</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="best-time">--:--</div>
+                            <div class="stat-description">Meilleur temps</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-score">0</div>
+                            <div class="stat-description">Score total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="streak">0</div>
+                            <div class="stat-description">Série actuelle</div>
+                        </div>
+                    </div>
+                </div>
+                <button id="close-settings" class="btn-primary">Fermer</button>
+            </div>
+        </div>
+
+        <div class="modal" id="tutorial-modal">
+            <div class="modal-content">
+                <h2 class="modal-title">Comment jouer</h2>
+                <div class="tutorial-content">
+                    <div class="tutorial-step active" data-step="1">
+                        <h3>Règles de base</h3>
+                        <p>Remplissez la grille 9x9 avec des chiffres de 1 à 9.</p>
+                        <p>Chaque ligne, colonne et carré 3x3 doit contenir tous les chiffres une seule fois.</p>
+                    </div>
+                    <div class="tutorial-step" data-step="2">
+                        <h3>Modes de jeu</h3>
+                        <p><strong>Classique:</strong> Progression normale avec niveaux</p>
+                        <p><strong>Sprint:</strong> Résolvez le plus rapidement possible</p>
+                        <p><strong>Zen:</strong> Pas de limite de temps, détendez-vous</p>
+                    </div>
+                    <div class="tutorial-step" data-step="3">
+                        <h3>Astuces</h3>
+                        <p>• Utilisez les indices quand vous êtes bloqué</p>
+                        <p>• Vérifiez vos erreurs avec le bouton vérifier</p>
+                        <p>• Votre progression est automatiquement sauvegardée</p>
+                    </div>
+                </div>
+                <div class="tutorial-nav">
+                    <button id="tutorial-prev" class="btn-secondary">Précédent</button>
+                    <span class="tutorial-progress">
+                        <span class="step-indicator active"></span>
+                        <span class="step-indicator"></span>
+                        <span class="step-indicator"></span>
+                    </span>
+                    <button id="tutorial-next" class="btn-primary">Suivant</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="daily-challenge" id="daily-challenge">
+            <div class="challenge-header">
+                <h3>🏆 Défi du jour</h3>
+                <div class="challenge-timer" id="challenge-timer">23:45:12</div>
+            </div>
+            <p class="challenge-description">Résolvez cette grille spéciale en moins de 5 minutes!</p>
+            <button id="start-challenge" class="btn-challenge">Commencer</button>
         </div>
     </div>
 

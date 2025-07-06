@@ -1,7 +1,7 @@
 {
-  "name": "Sudoku Progressive",
-  "short_name": "Sudoku",
-  "description": "Un jeu de Sudoku qui grandit en difficulté",
+  "name": "Sudokuku",
+  "short_name": "Sudokuku",
+  "description": "Le Sudoku mobile ultime avec progression, thèmes et défis",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#667eea",

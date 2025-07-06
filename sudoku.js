@@ -5,6 +5,16 @@ class SudokuGame {
         this.level = parseInt(localStorage.getItem('sudoku-level') || '1');
         this.score = parseInt(localStorage.getItem('sudoku-score') || '0');
         this.selectedCell = null;
+        this.gameMode = localStorage.getItem('sudoku-mode') || 'classic';
+        this.startTime = null;
+        this.elapsedTime = 0;
+        this.timerInterval = null;
+        this.isPaused = false;
+        this.currentTheme = localStorage.getItem('sudoku-theme') || 'default';
+        this.animationsEnabled = localStorage.getItem('sudoku-animations') !== 'false';
+        this.achievements = JSON.parse(localStorage.getItem('sudoku-achievements') || '[]');
+        this.statistics = JSON.parse(localStorage.getItem('sudoku-statistics') || '{}');
+        this.tutorialStep = 1;
         this.difficultySettings = {
             1: { name: 'Facile', cellsToRemove: 35 },
             2: { name: 'Facile', cellsToRemove: 40 },
@@ -13,15 +23,26 @@ class SudokuGame {
             5: { name: 'Difficile', cellsToRemove: 55 },
             6: { name: 'Difficile', cellsToRemove: 60 }
         };
+        this.achievementsList = [
+            { id: 'first_win', name: 'Premier Succès', description: 'Terminer votre première grille', icon: '🏆' },
+            { id: 'speed_demon', name: 'Démon de Vitesse', description: 'Terminer en moins de 3 minutes', icon: '⚡' },
+            { id: 'perfectionist', name: 'Perfectionniste', description: 'Terminer sans erreur', icon: '💎' },
+            { id: 'streak_master', name: 'Maître des Séries', description: '5 victoires consécutives', icon: '🔥' },
+            { id: 'zen_master', name: 'Maître Zen', description: '10 parties en mode Zen', icon: '🧘' }
+        ];
         this.init();
     }
 
     init() {
+        this.initializeStatistics();
+        this.applyTheme();
         this.updateDisplay();
         this.updateDateTime();
         this.generateGrid();
         this.setupEventListeners();
         this.startDateTimeUpdater();
+        this.setupDailyChallenge();
+        this.checkFirstTime();
     }
 
     generateGrid() {
@@ -38,6 +59,7 @@ class SudokuGame {
         
         this.removeNumbers();
         this.renderGrid();
+        this.startTimer();
     }
 
     createEmptyGrid() {
@@ -183,7 +205,20 @@ class SudokuGame {
     }
 
     handleVictory() {
-        this.score += this.level * 10;
+        this.stopTimer();
+        const timeBonus = Math.max(0, 300 - this.elapsedTime); // Bonus pour rapidité
+        this.score += (this.level * 10) + timeBonus;
+        
+        // Mettre à jour les statistiques
+        this.updateStatistics();
+        
+        // Vérifier les achievements
+        this.checkAchievements();
+        
+        // Afficher les résultats
+        document.getElementById('victory-time').textContent = this.formatTime(this.elapsedTime);
+        document.getElementById('victory-score').textContent = this.score;
+        
         this.level++;
         this.saveProgress();
         this.updateDisplay();
@@ -266,7 +301,311 @@ class SudokuGame {
         }, 1000);
     }
 
+    // === TIMER SYSTEM ===
+    startTimer() {
+        if (this.gameMode === 'zen') return; // Pas de timer en mode zen
+        
+        this.startTime = Date.now();
+        this.elapsedTime = 0;
+        this.isPaused = false;
+        
+        this.timerInterval = setInterval(() => {
+            if (!this.isPaused) {
+                this.elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
+                document.getElementById('timer').textContent = this.formatTime(this.elapsedTime);
+                
+                // Mode Sprint: limite de temps
+                if (this.gameMode === 'sprint' && this.elapsedTime >= 300) {
+                    this.handleTimeOut();
+                }
+            }
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+    }
+
+    pauseTimer() {
+        this.isPaused = true;
+    }
+
+    resumeTimer() {
+        this.isPaused = false;
+    }
+
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    handleTimeOut() {
+        this.stopTimer();
+        alert('Temps écoulé! Essayez encore.');
+        this.generateGrid();
+    }
+
+    // === GAME MODES ===
+    setGameMode(mode) {
+        this.gameMode = mode;
+        localStorage.setItem('sudoku-mode', mode);
+        
+        // Mettre à jour l'UI
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+        
+        // Adapter l'affichage selon le mode
+        const timerElement = document.getElementById('timer');
+        if (mode === 'zen') {
+            timerElement.textContent = '∞';
+        } else {
+            timerElement.textContent = '00:00';
+        }
+        
+        this.generateGrid();
+    }
+
+    // === THEMES SYSTEM ===
+    applyTheme() {
+        document.body.className = `theme-${this.currentTheme}`;
+        if (!this.animationsEnabled) {
+            document.body.classList.add('no-animations');
+        }
+    }
+
+    setTheme(theme) {
+        this.currentTheme = theme;
+        localStorage.setItem('sudoku-theme', theme);
+        this.applyTheme();
+        
+        // Mettre à jour l'UI
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-theme="${theme}"]`).classList.add('active');
+    }
+
+    toggleAnimations() {
+        this.animationsEnabled = !this.animationsEnabled;
+        localStorage.setItem('sudoku-animations', this.animationsEnabled.toString());
+        this.applyTheme();
+    }
+
+    // === STATISTICS SYSTEM ===
+    initializeStatistics() {
+        if (!this.statistics.totalGames) {
+            this.statistics = {
+                totalGames: 0,
+                totalScore: 0,
+                bestTime: null,
+                currentStreak: 0,
+                bestStreak: 0,
+                gamesWon: 0,
+                averageTime: 0,
+                zenGames: 0,
+                sprintGames: 0,
+                classicGames: 0
+            };
+        }
+    }
+
+    updateStatistics() {
+        this.statistics.totalGames++;
+        this.statistics.gamesWon++;
+        this.statistics.totalScore += this.score;
+        this.statistics.currentStreak++;
+        this.statistics[this.gameMode + 'Games']++;
+        
+        if (!this.statistics.bestTime || this.elapsedTime < this.statistics.bestTime) {
+            this.statistics.bestTime = this.elapsedTime;
+        }
+        
+        if (this.statistics.currentStreak > this.statistics.bestStreak) {
+            this.statistics.bestStreak = this.statistics.currentStreak;
+        }
+        
+        const totalTime = (this.statistics.averageTime * (this.statistics.gamesWon - 1)) + this.elapsedTime;
+        this.statistics.averageTime = Math.floor(totalTime / this.statistics.gamesWon);
+        
+        localStorage.setItem('sudoku-statistics', JSON.stringify(this.statistics));
+        this.updateStatisticsDisplay();
+    }
+
+    updateStatisticsDisplay() {
+        document.getElementById('total-games').textContent = this.statistics.totalGames;
+        document.getElementById('best-time').textContent = this.statistics.bestTime ? this.formatTime(this.statistics.bestTime) : '--:--';
+        document.getElementById('total-score').textContent = this.statistics.totalScore;
+        document.getElementById('streak').textContent = this.statistics.currentStreak;
+    }
+
+    // === ACHIEVEMENTS SYSTEM ===
+    checkAchievements() {
+        const newAchievements = [];
+        
+        // Premier succès
+        if (this.statistics.gamesWon === 1 && !this.hasAchievement('first_win')) {
+            newAchievements.push('first_win');
+        }
+        
+        // Démon de vitesse
+        if (this.elapsedTime < 180 && !this.hasAchievement('speed_demon')) {
+            newAchievements.push('speed_demon');
+        }
+        
+        // Maître des séries
+        if (this.statistics.currentStreak >= 5 && !this.hasAchievement('streak_master')) {
+            newAchievements.push('streak_master');
+        }
+        
+        // Maître Zen
+        if (this.statistics.zenGames >= 10 && !this.hasAchievement('zen_master')) {
+            newAchievements.push('zen_master');
+        }
+        
+        // Afficher les nouveaux achievements
+        newAchievements.forEach(id => {
+            this.achievements.push(id);
+            this.showAchievement(id);
+        });
+        
+        if (newAchievements.length > 0) {
+            localStorage.setItem('sudoku-achievements', JSON.stringify(this.achievements));
+        }
+    }
+
+    hasAchievement(id) {
+        return this.achievements.includes(id);
+    }
+
+    showAchievement(id) {
+        const achievement = this.achievementsList.find(a => a.id === id);
+        const container = document.getElementById('achievements-container');
+        
+        const achievementElement = document.createElement('div');
+        achievementElement.className = 'achievement-earned';
+        achievementElement.innerHTML = `
+            <span class="achievement-icon">${achievement.icon}</span>
+            <div class="achievement-info">
+                <div class="achievement-name">${achievement.name}</div>
+                <div class="achievement-desc">${achievement.description}</div>
+            </div>
+        `;
+        
+        container.appendChild(achievementElement);
+    }
+
+    // === DAILY CHALLENGE ===
+    setupDailyChallenge() {
+        const today = new Date().toDateString();
+        const lastChallenge = localStorage.getItem('last-daily-challenge');
+        
+        if (lastChallenge !== today) {
+            document.getElementById('daily-challenge').style.display = 'block';
+            this.updateChallengeTimer();
+        }
+    }
+
+    updateChallengeTimer() {
+        setInterval(() => {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            
+            const diff = tomorrow - now;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('challenge-timer').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    }
+
+    startDailyChallenge() {
+        const today = new Date().toDateString();
+        localStorage.setItem('last-daily-challenge', today);
+        document.getElementById('daily-challenge').style.display = 'none';
+        
+        // Grille spéciale pour le défi
+        this.gameMode = 'sprint';
+        this.generateGrid();
+    }
+
+    // === TUTORIAL SYSTEM ===
+    checkFirstTime() {
+        if (!localStorage.getItem('sudoku-tutorial-seen')) {
+            document.getElementById('tutorial-modal').style.display = 'flex';
+        }
+    }
+
+    nextTutorialStep() {
+        const currentStep = document.querySelector('.tutorial-step.active');
+        const nextStep = document.querySelector(`[data-step="${this.tutorialStep + 1}"]`);
+        
+        if (nextStep) {
+            currentStep.classList.remove('active');
+            nextStep.classList.add('active');
+            
+            // Mettre à jour les indicateurs
+            document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === this.tutorialStep);
+            });
+            
+            this.tutorialStep++;
+        } else {
+            this.closeTutorial();
+        }
+    }
+
+    prevTutorialStep() {
+        if (this.tutorialStep > 1) {
+            const currentStep = document.querySelector('.tutorial-step.active');
+            const prevStep = document.querySelector(`[data-step="${this.tutorialStep - 1}"]`);
+            
+            currentStep.classList.remove('active');
+            prevStep.classList.add('active');
+            
+            this.tutorialStep--;
+            
+            // Mettre à jour les indicateurs
+            document.querySelectorAll('.step-indicator').forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === this.tutorialStep - 1);
+            });
+        }
+    }
+
+    closeTutorial() {
+        document.getElementById('tutorial-modal').style.display = 'none';
+        localStorage.setItem('sudoku-tutorial-seen', 'true');
+    }
+
+    // === SOCIAL SHARING ===
+    shareResult() {
+        const text = `🎯 J'ai terminé le niveau ${this.level} de Sudoku Progressive en ${this.formatTime(this.elapsedTime)} !\n\n🏆 Score: ${this.score}\n⚡ Mode: ${this.gameMode}\n\nJouez maintenant: https://whalesrecords.github.io/sudokuku`;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: 'Sudoku Progressive',
+                text: text,
+                url: 'https://whalesrecords.github.io/sudokuku'
+            });
+        } else {
+            // Fallback: copier dans le presse-papier
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Résultat copié dans le presse-papier!');
+            });
+        }
+    }
+
     setupEventListeners() {
+        // Contrôles de jeu
         document.getElementById('new-game').addEventListener('click', () => {
             this.generateGrid();
         });
@@ -284,10 +623,70 @@ class SudokuGame {
             this.generateGrid();
         });
 
+        // Sélecteur de mode
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.setGameMode(btn.dataset.mode);
+            });
+        });
+
+        // Pavé numérique
         document.querySelectorAll('.number-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const number = parseInt(btn.dataset.number);
                 this.placeNumber(number);
+            });
+        });
+
+        // Paramètres
+        document.getElementById('settings').addEventListener('click', () => {
+            this.updateStatisticsDisplay();
+            document.getElementById('settings-modal').style.display = 'flex';
+        });
+
+        document.getElementById('close-settings').addEventListener('click', () => {
+            document.getElementById('settings-modal').style.display = 'none';
+        });
+
+        // Thèmes
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                this.setTheme(btn.dataset.theme);
+            });
+        });
+
+        // Toggle animations
+        document.getElementById('animations-toggle').addEventListener('change', (e) => {
+            this.animationsEnabled = e.target.checked;
+            localStorage.setItem('sudoku-animations', this.animationsEnabled.toString());
+            this.applyTheme();
+        });
+
+        // Partage
+        document.getElementById('share-result').addEventListener('click', () => {
+            this.shareResult();
+        });
+
+        // Défi quotidien
+        document.getElementById('start-challenge').addEventListener('click', () => {
+            this.startDailyChallenge();
+        });
+
+        // Tutoriel
+        document.getElementById('tutorial-next').addEventListener('click', () => {
+            this.nextTutorialStep();
+        });
+
+        document.getElementById('tutorial-prev').addEventListener('click', () => {
+            this.prevTutorialStep();
+        });
+
+        // Fermer les modals en cliquant à l'extérieur
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
             });
         });
     }
