@@ -296,14 +296,19 @@ header {
 .sudoku-grid {
     display: grid;
     grid-template-columns: repeat(9, 1fr);
+    grid-template-rows: repeat(9, 1fr);
     gap: 2px;
     background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     border: 4px solid #2c3e50;
     border-radius: 20px;
     margin-bottom: 25px;
-    aspect-ratio: 1;
+    width: 100%;
+    max-width: 400px;
+    height: 400px;
     padding: 8px;
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .cell {
@@ -992,6 +997,11 @@ input:checked + .slider:before {
         font-size: 20px;
     }
     
+    .sudoku-grid {
+        max-width: 320px;
+        height: 320px;
+    }
+    
     .stats {
         grid-template-columns: repeat(2, 1fr);
         grid-template-rows: repeat(2, 1fr);
@@ -1115,4 +1125,121 @@ input:checked + .slider:before {
     .btn-primary:active, .btn-secondary:active, .btn-accent:active {
         transform: scale(0.95);
     }
+}
+
+/* Memory System Styles */
+.btn-stats {
+    background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: "Poppins", sans-serif;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.modal-large {
+    max-width: 600px;
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.stats-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 4px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+    color: #7f8c8d;
+}
+
+.tab-btn.active {
+    background: white;
+    color: #2c3e50;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.hall-entry {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+}
+
+.hall-rank {
+    font-size: 18px;
+    font-weight: 700;
+    margin-right: 15px;
+    min-width: 40px;
+    text-align: center;
+}
+
+.hall-score {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.hall-info {
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.mode-record {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.history-entry {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.5);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    border-left: 4px solid transparent;
+}
+
+.history-entry.completed {
+    border-left-color: #27ae60;
+}
+
+.history-entry.abandoned {
+    border-left-color: #e74c3c;
+}
+
+.perf-card {
+    background: rgba(255, 255, 255, 0.5);
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.no-data {
+    text-align: center;
+    color: #7f8c8d;
+    font-style: italic;
+    padding: 40px 20px;
 }

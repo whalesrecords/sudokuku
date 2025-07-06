@@ -35,6 +35,7 @@ class SudokuGame {
 
     init() {
         this.initializeStatistics();
+        this.initializeMemorySystem();
         this.applyTheme();
         this.updateDisplay();
         this.updateDateTime();
@@ -43,11 +44,42 @@ class SudokuGame {
         this.startDateTimeUpdater();
         this.setupDailyChallenge();
         this.checkFirstTime();
+        window.sudokuGame = this;
+    }
+
+    initializeMemorySystem() {
+        this.gameHistory = JSON.parse(localStorage.getItem('sudoku-history') || '[]');
+        this.hallOfFame = JSON.parse(localStorage.getItem('sudoku-hall-of-fame') || '[]');
+        this.records = JSON.parse(localStorage.getItem('sudoku-records') || '{}');
+        this.hintsUsed = 0;
+        this.errorsCount = 0;
+        this.isGameCompleted = false;
+        
+        if (!this.records.classic) {
+            this.records = {
+                classic: { bestTime: null, maxLevel: 0, totalGames: 0 },
+                sprint: { bestTime: null, completed: 0, totalGames: 0 },
+                zen: { totalGames: 0, totalTime: 0 }
+            };
+        }
+        
+        if (!this.statistics.totalHints) {
+            this.statistics.totalHints = 0;
+            this.statistics.totalErrors = 0;
+            this.statistics.gamesAbandoned = 0;
+        }
     }
 
     generateGrid() {
+        if (this.startTime && !this.isGameCompleted) {
+            this.saveAbandonedGame();
+        }
+        
         this.grid = this.createEmptyGrid();
         this.solution = this.createEmptyGrid();
+        this.hintsUsed = 0;
+        this.errorsCount = 0;
+        this.isGameCompleted = false;
         
         this.fillGrid(this.solution);
         
