@@ -1030,11 +1030,11 @@ input:checked + .slider:before {
     }
     
     .cell {
-        font-size: 14px;
+        font-size: 16px;
     }
     
     .number-btn {
-        font-size: 16px;
+        font-size: 18px;
     }
     
     .daily-challenge {
@@ -1071,11 +1071,11 @@ input:checked + .slider:before {
     }
     
     .cell {
-        font-size: 14px;
+        font-size: 16px;
     }
     
     .number-btn {
-        font-size: 16px;
+        font-size: 18px;
     }
 }
 
